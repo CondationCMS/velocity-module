@@ -21,8 +21,6 @@ package com.condation.cms.modules.velocity;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-
-
 import com.condation.cms.api.ServerProperties;
 import com.condation.cms.api.db.DB;
 import com.condation.cms.api.db.DBFileSystem;
@@ -30,7 +28,6 @@ import com.condation.cms.api.template.TemplateEngine;
 import com.condation.cms.api.theme.Theme;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,72 +35,75 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 /**
  *
  * @author t.marx
  */
 @ExtendWith(MockitoExtension.class)
-public class ThemeTemplateLoaderTest {
-	
-	
+public class VelocityTemplateEngineTest {
+
 	VelocityTemplateEngine templateEngine;
-	
-	
+
 	@BeforeEach
-	void setup () {
+	void setup() {
 		var db = Mockito.mock(DB.class);
 		var fileSystem = Mockito.mock(DBFileSystem.class);
 		var theme = Mockito.mock(Theme.class);
 		var serverProperties = Mockito.mock(ServerProperties.class);
-		
+
 //		Mockito.when(serverProperties.dev()).thenReturn(Boolean.FALSE);
 		Mockito.when(db.getFileSystem()).thenReturn(fileSystem);
 		Mockito.when(fileSystem.resolve("templates/")).thenReturn(Path.of("src/test/resources/site"));
 		Mockito.when(theme.templatesPath()).thenReturn(Path.of("src/test/resources/theme"));
-		
+
 		templateEngine = new VelocityTemplateEngine(db, serverProperties, theme);
 	}
-	
 
 	@Test
 	public void load_template_from_site() throws IOException {
-		String result = templateEngine.render("only-site.vm", new TemplateEngine.Model(null, null));		
+		String result = templateEngine.render("only-site.vm", new TemplateEngine.Model(null, null));
 		Assertions.assertThat(result).isEqualTo("site");
 	}
-	
+
 	@Test
 	public void load_template_from_theme() throws IOException {
-		String result = templateEngine.render("only-theme.vm", new TemplateEngine.Model(null, null));		
+		String result = templateEngine.render("only-theme.vm", new TemplateEngine.Model(null, null));
 		Assertions.assertThat(result).isEqualTo("theme");
 	}
-	
+
 	@Test
 	public void load_overriden_template() throws IOException {
-		String result = templateEngine.render("test.vm", new TemplateEngine.Model(null, null));		
+		String result = templateEngine.render("test.vm", new TemplateEngine.Model(null, null));
 		Assertions.assertThat(result).isEqualTo("from site");
 	}
-	
+
 	@Test
 	public void reload_theme() throws IOException {
-		
+
 		var theme = Mockito.mock(Theme.class);
 		Mockito.when(theme.templatesPath()).thenReturn(Path.of("src/test/resources/theme2"));
 		templateEngine.updateTheme(theme);
-		
-		
-		String result = templateEngine.render("only-theme.vm", new TemplateEngine.Model(null, null));		
+
+		String result = templateEngine.render("only-theme.vm", new TemplateEngine.Model(null, null));
 		Assertions.assertThat(result).isEqualTo("theme2");
 	}
-	
+
 	@Test
 	public void invalidate_cache() throws IOException {
-		String result = templateEngine.render("only-site.vm", new TemplateEngine.Model(null, null));		
+		String result = templateEngine.render("only-site.vm", new TemplateEngine.Model(null, null));
 		Assertions.assertThat(result).isEqualTo("site");
-		
+
 		templateEngine.invalidateCache();
-		
-		result = templateEngine.render("only-site.vm", new TemplateEngine.Model(null, null));		
+
+		result = templateEngine.render("only-site.vm", new TemplateEngine.Model(null, null));
 		Assertions.assertThat(result).isEqualTo("site");
+	}
+
+	@Test
+	public void string_rendering() throws IOException {
+		var model = new TemplateEngine.Model(null, null);
+		model.values.put("name", "CondationCMS");
+		String result = templateEngine.renderString("Hello ${name}", model);
+		Assertions.assertThat(result).isEqualTo("Hello CondationCMS");
 	}
 }
