@@ -103,7 +103,7 @@ public class VelocityTemplateEngineTest {
 	public void string_rendering() throws IOException {
 		var model = new TemplateEngine.Model(null, null);
 		model.values.put("name", "CondationCMS");
-		String result = templateEngine.renderString("Hello ${name}", model);
+		String result = templateEngine.renderFromString("Hello ${name}", model);
 		Assertions.assertThat(result).isEqualTo("Hello CondationCMS");
 	}
 }

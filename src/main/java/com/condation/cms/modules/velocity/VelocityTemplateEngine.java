@@ -77,7 +77,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
 	}
 
 	@Override
-	public String renderString(String templateString, Model model) throws IOException {
+	public String renderFromString(String templateString, Model model) throws IOException {
 		try (StringWriter out = new StringWriter()) {
 				VelocityContext context = new VelocityContext(model.values);
 
