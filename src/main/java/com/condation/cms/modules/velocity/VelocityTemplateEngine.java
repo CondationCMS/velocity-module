@@ -34,11 +34,14 @@ import java.util.List;
 import java.util.Properties;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 
 public class VelocityTemplateEngine implements TemplateEngine {
 
-	private final VelocityEngine engine;
+	private final VelocityEngine fileEngine;
+	private final VelocityEngine stringEngine;
 
 	private final DB db;
 	private Theme theme;
@@ -49,7 +52,8 @@ public class VelocityTemplateEngine implements TemplateEngine {
 		this.theme = theme;
 
 		try {
-			engine = new VelocityEngine();
+			fileEngine = new VelocityEngine();
+			stringEngine = new VelocityEngine();
 
 			updateTheme(theme);
 		} catch (Exception ex) {
@@ -60,12 +64,25 @@ public class VelocityTemplateEngine implements TemplateEngine {
 	@Override
 	public String render(final String template, final VelocityTemplateEngine.Model model) throws IOException {
 		try (StringWriter out = new StringWriter()) {
-			Template loadedTemplate = engine.getTemplate(template, StandardCharsets.UTF_8.name());
+			Template loadedTemplate = fileEngine.getTemplate(template, StandardCharsets.UTF_8.name());
 
 			VelocityContext context = new VelocityContext(model.values);
 
 			loadedTemplate.merge(context, out);
 
+			return out.toString();
+		} catch (IOException e) {
+			throw new IOException(e);
+		}
+	}
+
+	@Override
+	public String renderFromString(String templateString, Model model) throws IOException {
+		try (StringWriter out = new StringWriter()) {
+				VelocityContext context = new VelocityContext(model.values);
+
+			fileEngine.evaluate(context, out, "template string evaluation", templateString);
+			
 			return out.toString();
 		} catch (IOException e) {
 			throw new IOException(e);
@@ -97,9 +114,11 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
 		props.setProperty("file.resource.loader.cache", "true");
 		props.setProperty("file.resource.loader.modificationCheckInterval", "5");
-		engine.reset();
-		engine.init(props);
+		fileEngine.reset();
+		fileEngine.init(props);
 
+		stringEngine.setProperty(Velocity.RESOURCE_LOADER, "string");
+		stringEngine.addProperty("string.resource.loader.class", StringResourceLoader.class.getName());
 	}
 
 }
