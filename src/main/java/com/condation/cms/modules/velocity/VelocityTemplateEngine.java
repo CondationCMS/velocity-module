@@ -23,7 +23,6 @@ package com.condation.cms.modules.velocity;
  */
 import com.condation.cms.api.ServerProperties;
 import com.condation.cms.api.db.DB;
-import com.condation.cms.api.db.DBFileSystem;
 import com.condation.cms.api.template.TemplateEngine;
 import com.condation.cms.api.theme.Theme;
 import java.io.IOException;
@@ -89,6 +88,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
 		loaders.add(db.getFileSystem().resolve("templates/").toAbsolutePath().toString());
 		if (!theme.empty()) {
 			loaders.add(theme.templatesPath().toAbsolutePath().toString());
+			
+			if (theme.getParentTheme() != null) {
+				loaders.add(theme.getParentTheme().templatesPath().toAbsolutePath().toString());
+			}
 		}
 		props.setProperty("file.resource.loader.path", String.join(",", loaders));
 
