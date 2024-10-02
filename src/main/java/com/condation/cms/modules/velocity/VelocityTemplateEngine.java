@@ -105,6 +105,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
 		loaders.add(db.getFileSystem().resolve("templates/").toAbsolutePath().toString());
 		if (!theme.empty()) {
 			loaders.add(theme.templatesPath().toAbsolutePath().toString());
+			
+			if (theme.getParentTheme() != null) {
+				loaders.add(theme.getParentTheme().templatesPath().toAbsolutePath().toString());
+			}
 		}
 		props.setProperty("file.resource.loader.path", String.join(",", loaders));
 
